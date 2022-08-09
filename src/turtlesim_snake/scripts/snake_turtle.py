@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import roslib
-roslib.load_manifest('learning_tf')
+roslib.load_manifest('turtlesim_snake')
 import rospy
 import tf
 import math
@@ -8,7 +8,7 @@ import turtlesim.msg
 import geometry_msgs.msg
 import turtlesim.srv
 import random
-from learning_tf.srv import InitTurtle
+from turtlesim_snake.srv import InitTurtle
 from std_srvs.srv import EmptyResponse, Empty
 
 
@@ -23,7 +23,7 @@ def snake_server(req):
 
     rospy.wait_for_service('spawn')
     spawner = rospy.ServiceProxy('spawn', turtlesim.srv.Spawn)
-    new_snake()
+    new_turtle()
 
     name = "turtle" + str(counter)
     spawner(req.x, req.y, req.angle, name)
@@ -66,13 +66,13 @@ def turtle1_callback(msg, turtlename):
 
     carrotname = "carrot" + turtlename[len(turtlename)-1]
     br.sendTransform((-0.5, 0.0, 0.0),
-                     (0.0, 0.0, 0.0, 1.0),
+                     tf.transformations.quaternion_from_euler(0, 0, msg.theta),
                      rospy.Time.now(),
                      carrotname,
                      turtlename)
 
 
-def new_snake():
+def new_turtle():
     global counter
     counter += 1
     turtlename = "turtle" + str(counter)
@@ -97,7 +97,7 @@ def change_background_color_client(r, g, b):
 if __name__ == '__main__':
     rospy.init_node('snake_turtle_game')
 
-    new_snake()
+    new_turtle()
     start_snake_server()
     rate = rospy.Rate(20.0)
     listener = tf.TransformListener()
@@ -141,7 +141,6 @@ if __name__ == '__main__':
             turtle_name = "turtle" + str(i+1)
             turtle_before = "carrot" + str(i)
 
-            # follow turtle - 1
             try:
                 now = rospy.Time.now()
                 past = now - rospy.Duration(1.0)
