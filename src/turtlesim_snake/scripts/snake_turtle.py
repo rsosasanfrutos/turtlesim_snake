@@ -14,7 +14,16 @@ from std_srvs.srv import EmptyResponse, Empty
 
 counter = 0
 turtle_list = []
-#class MyTurtle():
+
+
+class MyTurtle:
+    def __init__(self, num):
+        self.turtlename = "turtle" + str(num)
+        self.frame2follow = "carrot" + str(num - 1)
+        self.turtle_vel = rospy.Publisher(self.turtlename + "/cmd_vel", geometry_msgs.msg.Twist, queue_size=1)
+
+    def publish_vel(self, cmd):
+        self.turtle_vel.publish(cmd)
 
 
 def snake_server(req):
@@ -33,9 +42,10 @@ def snake_server(req):
     except rospy.ServiceException as e:
         print("Service call failed: %s" % e)
 
-    command = name + "/cmd_vel"
-    turtle_vel = rospy.Publisher(command, geometry_msgs.msg.Twist, queue_size=1)
-    turtle_list.append(turtle_vel)
+    #command = name + "/cmd_vel"
+    #turtle_vel = rospy.Publisher(command, geometry_msgs.msg.Twist, queue_size=1)
+
+    turtle_list.append(MyTurtle(counter))
     return []
 
 
@@ -113,13 +123,10 @@ if __name__ == '__main__':
             except (tf.Exception, tf.LookupException, tf.ConnectivityException) as e:
                 rospy.logwarn("ERROR : %s", e)
                 continue
-            #acceptance = 0.5
             if (abs(trans[0]) < acceptance) and (abs(trans[1]) < acceptance):
                 print(trans)
                 rospy.loginfo("Start Following")
                 add_new_turtle_client()
-                var = 255 - 25*counter
-                #change_background_color_client(var, var, var)
                 change_background_color_client(random.randint(1, 255), random.randint(1, 255), random.randint(1, 255))
         else:
             add_new_turtle_client()
@@ -128,26 +135,29 @@ if __name__ == '__main__':
         #for i in range(1, counter):
             #try:
                 #now = rospy.Time.now()
-                #past = now - rospy.Duration(i+5)
+                #past = now - rospy.Duration(i+1)
                 #listener.waitForTransformFull("/turtle1", now, "/turtle1", past, "/world", rospy.Duration(1.0))
                 #(trans1, rot1) = listener.lookupTransform("/turtle1", "/turtle1", rospy.Time(0))
             #except (tf.Exception, tf.LookupException, tf.ConnectivityException) as e:
                 #rospy.logwarn("ERROR : %s", e)
                 #continue
-            #acceptance = 0.1
-            #if (abs(trans1[0]) < acceptance) and (abs(trans1[1]) < acceptance):
+            #n_acceptance = 0.1
+            #if (abs(trans1[0]) < n_acceptance) and (abs(trans1[1]) < n_acceptance):
                 #rospy.loginfo("I hit myself with %s")
                 #change_background_color_client(255, 0, 0)
 
-        for i in range (1, counter-1):
-            turtle_name = "turtle" + str(i+1)
-            turtle_before = "carrot" + str(i)
+        #for i in range (1, counter-1):
+        for i in turtle_list[:-1]:
+            #turtle_name = "turtle" + str(i+1)
+            #turtle_before = "carrot" + str(i)
 
             try:
                 now = rospy.Time.now()
                 past = now - rospy.Duration(1.0)
-                listener.waitForTransformFull(turtle_name, now, turtle_before, past, "/world", rospy.Duration(1.0))
-                (trans, rot) = listener.lookupTransform(turtle_name, turtle_before, rospy.Time(0))
+                #listener.waitForTransformFull(turtle_name, now, turtle_before, past, "/world", rospy.Duration(1.0))
+                listener.waitForTransformFull(i.turtlename, now, i.frame2follow, past, "/world", rospy.Duration(1.0))
+                #(trans, rot) = listener.lookupTransform(turtle_name, turtle_before, rospy.Time(0))
+                (trans, rot) = listener.lookupTransform(i.turtlename, i.frame2follow, rospy.Time(0))
             except (tf.Exception, tf.LookupException, tf.ConnectivityException) as e:
                 rospy.logwarn("ERROR : %s", e)
                 continue
@@ -157,6 +167,7 @@ if __name__ == '__main__':
             cmd = geometry_msgs.msg.Twist()
             cmd.linear.x = linear
             cmd.angular.z = angular
-            turtle_list[i-1].publish(cmd)
+            #turtle_list[i-1].publish(cmd)
+            i.publish_vel(cmd)
 
         rate.sleep()
