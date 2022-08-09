@@ -101,6 +101,8 @@ if __name__ == '__main__':
     start_snake_server()
     rate = rospy.Rate(20.0)
     listener = tf.TransformListener()
+    acceptance = rospy.get_param('/snake_turtle/acceptance')
+
     while not rospy.is_shutdown():
 
         if counter != 1:
@@ -111,7 +113,7 @@ if __name__ == '__main__':
             except (tf.Exception, tf.LookupException, tf.ConnectivityException) as e:
                 rospy.logwarn("ERROR : %s", e)
                 continue
-            acceptance = 0.5
+            #acceptance = 0.5
             if (abs(trans[0]) < acceptance) and (abs(trans[1]) < acceptance):
                 print(trans)
                 rospy.loginfo("Start Following")
