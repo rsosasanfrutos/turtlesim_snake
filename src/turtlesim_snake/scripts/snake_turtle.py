@@ -42,9 +42,6 @@ def snake_server(req):
     except rospy.ServiceException as e:
         print("Service call failed: %s" % e)
 
-    #command = name + "/cmd_vel"
-    #turtle_vel = rospy.Publisher(command, geometry_msgs.msg.Twist, queue_size=1)
-
     turtle_list.append(MyTurtle(counter))
     return []
 
@@ -131,32 +128,12 @@ if __name__ == '__main__':
         else:
             add_new_turtle_client()
 
-        # check if turtle1 hits itself
-        #for i in range(1, counter):
-            #try:
-                #now = rospy.Time.now()
-                #past = now - rospy.Duration(i+1)
-                #listener.waitForTransformFull("/turtle1", now, "/turtle1", past, "/world", rospy.Duration(1.0))
-                #(trans1, rot1) = listener.lookupTransform("/turtle1", "/turtle1", rospy.Time(0))
-            #except (tf.Exception, tf.LookupException, tf.ConnectivityException) as e:
-                #rospy.logwarn("ERROR : %s", e)
-                #continue
-            #n_acceptance = 0.1
-            #if (abs(trans1[0]) < n_acceptance) and (abs(trans1[1]) < n_acceptance):
-                #rospy.loginfo("I hit myself with %s")
-                #change_background_color_client(255, 0, 0)
-
-        #for i in range (1, counter-1):
         for i in turtle_list[:-1]:
-            #turtle_name = "turtle" + str(i+1)
-            #turtle_before = "carrot" + str(i)
 
             try:
                 now = rospy.Time.now()
                 past = now - rospy.Duration(1.0)
-                #listener.waitForTransformFull(turtle_name, now, turtle_before, past, "/world", rospy.Duration(1.0))
                 listener.waitForTransformFull(i.turtlename, now, i.frame2follow, past, "/world", rospy.Duration(1.0))
-                #(trans, rot) = listener.lookupTransform(turtle_name, turtle_before, rospy.Time(0))
                 (trans, rot) = listener.lookupTransform(i.turtlename, i.frame2follow, rospy.Time(0))
             except (tf.Exception, tf.LookupException, tf.ConnectivityException) as e:
                 rospy.logwarn("ERROR : %s", e)
@@ -167,7 +144,6 @@ if __name__ == '__main__':
             cmd = geometry_msgs.msg.Twist()
             cmd.linear.x = linear
             cmd.angular.z = angular
-            #turtle_list[i-1].publish(cmd)
             i.publish_vel(cmd)
 
         rate.sleep()
